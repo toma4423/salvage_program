@@ -28,11 +28,11 @@ class MainWindow:
         self.current_disk: Optional[Disk] = None
         self.selected_files: List[File] = []
 
-    def create_layout(self) -> List[List[sg.Element]]:
+    def create_layout(self) -> List[List[Any]]:
         """GUIレイアウトの作成
 
         Returns:
-            List[List[sg.Element]]: 作成されたレイアウト
+            List[List[Any]]: 作成されたレイアウト
         """
         # ディスク情報セクション
         disk_section = [
