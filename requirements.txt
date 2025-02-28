@@ -1,5 +1,7 @@
 --index-url https://PySimpleGUI.net/install
-PySimpleGUI==5.0.0.16
-pytest==8.0.2
+PySimpleGUI==4.60.5
+pytest==7.4.3
 pytest-cov==4.1.0
+pytest-xdist==3.3.1
+codecov==2.1.13
 typing-extensions==4.9.0 
