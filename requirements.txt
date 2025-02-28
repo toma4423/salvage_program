@@ -1,0 +1,4 @@
+PySimpleGUI==4.60.5
+pytest==8.0.2
+pytest-cov==4.1.0
+typing-extensions==4.9.0 
