@@ -101,17 +101,19 @@ def test_update_progress(main_window, mock_window):
     test_value = 50
     test_message = "テスト進捗"
 
-    # プログレスバーとステータスメッセージの更新を個別にモック化
-    progress_mock = MagicMock()
-    status_mock = MagicMock()
-    mock_window["-PROGRESS-"].update = progress_mock
-    mock_window["-STATUS-"].update = status_mock
+    # プログレスバーとステータスメッセージのモックを設定
+    progress_element = MagicMock()
+    status_element = MagicMock()
+    mock_window.__getitem__.side_effect = lambda x: {
+        "-PROGRESS-": progress_element,
+        "-STATUS-": status_element,
+    }[x]
 
     main_window.update_progress(test_value, test_message)
 
-    # 個別に更新が呼ばれたことを確認
-    progress_mock.assert_called_once_with(current_count=test_value)
-    status_mock.assert_called_once_with(value=test_message)
+    # 更新が正しく呼ばれたことを確認
+    progress_element.update.assert_called_once_with(current_count=test_value)
+    status_element.update.assert_called_once_with(value=test_message)
 
 
 def test_show_error(main_window, mock_sg):
