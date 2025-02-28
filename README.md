@@ -21,6 +21,10 @@ WindowsPCが起動しない状態においても、USBブート可能なLinuxOS�
 ### 必要条件
 - Python 3.11以上
 - pip（Pythonパッケージマネージャー）
+- Linux環境（実行時）：
+  - fsck.ext4
+  - ntfs-3g
+  - smartmontools
 
 ### セットアップ手順
 1. リポジトリをクローン
@@ -72,6 +76,30 @@ salvage_program/
 └── README.md
 ```
 
+## テスト
+### テストの実行
+```bash
+# すべてのテストを実行
+pytest
+
+# 詳細なテスト結果を表示
+pytest -v
+
+# テストカバレッジを計測
+pytest --cov=src --cov-report=term-missing
+```
+
+### 環境依存のテスト
+一部のテストは特定の環境でのみ実行されます：
+- `@pytest.mark.linux_only`: Linux環境専用のテスト
+- `@pytest.mark.windows_only`: Windows環境専用のテスト
+
+### 継続的インテグレーション
+- GitHub Actionsを使用した自動テスト
+- Ubuntu環境でのテスト実行
+- テストカバレッジレポートの自動生成
+- Codecovへのレポートアップロード
+
 ## エラーコード
 エラーが発生した場合は、`ERROR_REFERENCE.md`を参照してください。主なエラーコードは以下の通りです：
 
@@ -81,15 +109,14 @@ salvage_program/
 
 ## 開発者向け情報
 
-### テスト実行
-```bash
-pytest
-```
-
 ### コードスタイル
 - PEP 8に準拠
 - Type Hintsを使用
 - docstringによるドキュメント化
+
+### テストカバレッジ目標
+- 全体のカバレッジ: 80%以上
+- 重要なモジュール（ディスク操作、ファイル操作）: 90%以上
 
 ## ライセンス
 このプロジェクトはMITライセンスの下で公開されています。
