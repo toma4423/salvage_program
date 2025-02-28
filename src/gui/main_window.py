@@ -187,7 +187,7 @@ class MainWindow:
             message (str): 表示するメッセージ
         """
         if self.window:
-            self.window["-PROGRESS-"].update(value)
+            self.window["-PROGRESS-"].update(current_count=value)
             self.window["-STATUS-"].update(value=message)
 
     def show_error(self, message: str) -> None:
@@ -241,6 +241,26 @@ class MainWindow:
                 "正常" if status.is_consistent else f"問題あり: {status.details}"
             )
             self.window["-DISK_STATUS-"].update(status_text)
+
+    def handle_file_selection(self, event: str, values: Dict[str, Any]) -> None:
+        """ファイル選択イベントを処理する
+
+        Args:
+            event (str): イベント名
+            values (Dict[str, Any]): イベントの値
+        """
+        if not self.window:
+            return
+
+        if event == "-SELECT-" and values.get("-FILE_TREE-"):
+            self.selected_files = values["-FILE_TREE-"]
+        elif event == "-SELECT_ALL-":
+            if self.window["-FILE_TREE-"].get_children:
+                self.selected_files = self.window["-FILE_TREE-"].get_children()
+            else:
+                self.selected_files = []
+        elif event == "-DESELECT-":
+            self.selected_files = []
 
     def close(self) -> None:
         """ウィンドウを閉じる"""
