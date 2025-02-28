@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "salvage_program"
+version = "0.1.0"
+description = "WindowsデータサルベージプログラムのLinuxデスクトップアプリケーション"
+requires-python = ">=3.8"
+dependencies = [
+    "PySimpleGUI",
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v" 
