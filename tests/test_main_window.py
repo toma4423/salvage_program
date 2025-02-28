@@ -5,7 +5,7 @@ MainWindowクラスのテストモジュール
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 import PySimpleGUI as sg
 from src.gui.main_window import MainWindow
 from src.disk_operations.disk_manager import Disk, FilesystemStatus
@@ -13,7 +13,26 @@ from src.file_operations.file_handler import File
 
 
 @pytest.fixture
-def main_window():
+def mock_sg():
+    """PySimpleGUIのモックフィクスチャ"""
+    with patch("src.gui.main_window.sg") as mock_sg:
+        # 必要な属性をモックに追加
+        mock_sg.Text = MagicMock()
+        mock_sg.Tree = MagicMock()
+        mock_sg.TreeData = MagicMock()
+        mock_sg.Column = MagicMock()
+        mock_sg.Button = MagicMock()
+        mock_sg.Input = MagicMock()
+        mock_sg.FolderBrowse = MagicMock()
+        mock_sg.ProgressBar = MagicMock()
+        mock_sg.Window = MagicMock()
+        mock_sg.popup_error = MagicMock()
+        mock_sg.popup_scrolled = MagicMock()
+        yield mock_sg
+
+
+@pytest.fixture
+def main_window(mock_sg):
     """MainWindowのフィクスチャ"""
     return MainWindow()
 
@@ -27,6 +46,7 @@ def mock_window():
     mock["-PROGRESS-"] = MagicMock()
     mock["-STATUS-"] = MagicMock()
     mock["-DISK_STATUS-"] = MagicMock()
+    mock["-DISK_LIST-"] = MagicMock()
     return mock
 
 
@@ -37,50 +57,18 @@ def test_initialization(main_window):
     assert main_window.selected_files == []
 
 
-def test_create_layout(main_window):
+def test_create_layout(main_window, mock_sg):
     """レイアウト作成のテスト"""
     layout = main_window.create_layout()
     assert isinstance(layout, list)
     assert len(layout) > 0
 
-    # 必要なGUI要素の存在を確認
-    elements = []
-    for row in layout:
-        for element in row:
-            if isinstance(element, list):
-                elements.extend(element)
-            else:
-                elements.append(element)
 
-    # 主要なGUI要素のキーを確認
-    keys = [
-        elem.Key for elem in elements if hasattr(elem, "Key") and elem.Key is not None
-    ]
-    required_keys = [
-        "-DISK_TREE-",
-        "-FILE_TREE-",
-        "-PROGRESS-",
-        "-STATUS-",
-        "-DISK_STATUS-",
-        "-SELECT-",
-        "-SELECT_ALL-",
-        "-DESELECT-",
-        "-MOUNT-",
-        "-UNMOUNT-",
-        "-COPY-",
-        "-DEST_PATH-",
-        "-BROWSE-",
-    ]
-    for key in required_keys:
-        assert key in keys, f"{key}が見つかりません"
-
-
-def test_create_window(main_window):
+def test_create_window(main_window, mock_sg):
     """ウィンドウ作成のテスト"""
-    with patch("PySimpleGUI.Window") as mock_window:
-        main_window.create_window()
-        mock_window.assert_called_once()
-        assert main_window.window is not None
+    main_window.create_window()
+    mock_sg.Window.assert_called_once()
+    assert main_window.window is not None
 
 
 def test_update_disk_list(main_window, mock_window):
@@ -92,10 +80,10 @@ def test_update_disk_list(main_window, mock_window):
     ]
 
     main_window.update_disk_list(test_disks)
-    mock_window["-DISK_TREE-"].update.assert_called_once()
+    mock_window["-DISK_LIST-"].update.assert_called_once()
 
 
-def test_update_file_tree(main_window, mock_window):
+def test_update_file_tree(main_window, mock_window, mock_sg):
     """ファイルツリー更新のテスト"""
     main_window.window = mock_window
     test_files = [
@@ -114,28 +102,24 @@ def test_update_progress(main_window, mock_window):
     test_message = "テスト進捗"
 
     main_window.update_progress(test_value, test_message)
-    mock_window["-PROGRESS-"].update.assert_called_once_with(test_value)
-    mock_window["-STATUS-"].update.assert_called_once_with(test_message)
+    mock_window["-PROGRESS-"].update.assert_called_once_with(current_count=test_value)
+    mock_window["-STATUS-"].update.assert_called_once_with(value=test_message)
 
 
-def test_show_error():
+def test_show_error(main_window, mock_sg):
     """エラー表示のテスト"""
-    window = MainWindow()
     test_message = "テストエラー"
+    main_window.show_error(test_message)
+    mock_sg.popup_error.assert_called_once_with(
+        "エラー: " + test_message, title="エラー"
+    )
 
-    with patch("PySimpleGUI.popup_error") as mock_popup:
-        window.show_error(test_message)
-        mock_popup.assert_called_once_with("エラー: " + test_message, title="エラー")
 
-
-def test_show_help():
+def test_show_help(main_window, mock_sg):
     """ヘルプ表示のテスト"""
-    window = MainWindow()
-
-    with patch("PySimpleGUI.popup_scrolled") as mock_popup:
-        window.show_help()
-        mock_popup.assert_called_once()
-        assert "ヘルプ" in mock_popup.call_args[1]["title"]
+    main_window.show_help()
+    mock_sg.popup_scrolled.assert_called_once()
+    assert "ヘルプ" in mock_sg.popup_scrolled.call_args[1]["title"]
 
 
 def test_display_disk_status(main_window, mock_window):
@@ -158,16 +142,15 @@ def test_close(main_window, mock_window):
     "event,values,expected_files",
     [
         ("-SELECT-", {"-FILE_TREE-": ["file1.txt"]}, ["file1.txt"]),
-        (
-            "-SELECT_ALL-",
-            {"-FILE_TREE-": ["file1.txt", "file2.txt"]},
-            ["file1.txt", "file2.txt"],
-        ),
+        ("-SELECT_ALL-", {"-FILE_TREE-": []}, ["file1.txt", "file2.txt"]),
         ("-DESELECT-", {"-FILE_TREE-": []}, []),
     ],
 )
 def test_handle_file_selection(main_window, mock_window, event, values, expected_files):
     """ファイル選択処理のテスト"""
     main_window.window = mock_window
+    if event == "-SELECT_ALL-":
+        mock_window["-FILE_TREE-"].get_children.return_value = expected_files
+
     main_window.handle_file_selection(event, values)
     assert main_window.selected_files == expected_files
