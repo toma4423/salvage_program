@@ -24,7 +24,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y fsck.ext4 ntfs-3g smartmontools
+        sudo apt-get install -y e2fsprogs ntfs-3g smartmontools
     
     - name: Install Python dependencies
       run: |
